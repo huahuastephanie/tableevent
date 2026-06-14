@@ -157,6 +157,20 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
   </div>
 </div>
 
+<div class="modal-bg" id="login-modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-code">🔒 管理員登入</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:12px 0;">
+      <input type="email" id="login-email" placeholder="Email" style="font-size:14px;padding:10px;border-radius:8px;border:1px solid #D1D5DB;outline:none;width:100%;" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" id="login-pw" placeholder="密碼" style="font-size:14px;padding:10px;border-radius:8px;border:1px solid #D1D5DB;outline:none;width:100%;" onkeydown="if(event.key==='Enter')doLogin()">
+      <div id="login-err" style="font-size:12px;color:#B91C1C;min-height:16px;"></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;" onclick="doLogin()">登入</button>
+    <button class="modal-close" onclick="document.getElementById('login-modal-bg').classList.remove('show')">取消</button>
+  </div>
+</div>
+
 <div class="modal-bg" id="layout-modal-bg" onclick="if(event.target===this)this.classList.remove('show')">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -226,9 +240,10 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
     <div class="stat"><span class="sv" id="sg">0</span><span class="sl">賓客</span></div>
   </div>
   <div class="btns">
-    <button class="btn btn-setting" id="btn-setting" onclick="document.getElementById('layout-modal-bg').classList.add('show')">⚙️ 架構設定</button>
+    <button class="btn" id="btn-login" onclick="handleAuth()" style="border-color:#FCA5A5;color:#B91C1C;background:#FEF2F2;">🔒 登入</button>
+    <button class="btn btn-setting admin-only" id="btn-setting" style="display:none;" onclick="document.getElementById('layout-modal-bg').classList.add('show')">⚙️ 架構設定</button>
     <button class="btn btn-ex" id="exbtn" onclick="doExport()">⬇ 匯出 XLSX</button>
-    <button class="btn btn-rst" onclick="doReset()">⚠️ 重置</button>
+    <button class="btn btn-rst admin-only" style="display:none;" onclick="doReset()">⚠️ 重置</button>
   </div>
 </div>
 <div class="pbar"><div class="pfill" id="pf" style="width:0%"></div></div>
@@ -257,12 +272,12 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
       <span style="font-size:11px;color:#9CA3AF;white-space:nowrap;align-self:center;">🔍 搜尋</span>
       <input type="text" id="gs" placeholder="搜尋賓客姓名或公司..." oninput="renderChips()" />
     </div>
-    <div class="sr" style="margin-bottom:0;">
+    <div class="sr admin-only" style="margin-bottom:0;display:none;">
       <span style="font-size:11px;color:#9CA3AF;white-space:nowrap;align-self:center;">➕ 新增</span>
       <input type="text" id="gi" placeholder="輸入新賓客名字，按 Enter" onkeydown="if(event.key==='Enter')addGuest()" />
       <button class="btn" onclick="addGuest()">新增</button>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+    <div class="admin-only" style="display:none;flex;gap:6px;align-items:center;flex-wrap:wrap;">
       <span style="font-size:11px;color:#9CA3AF;white-space:nowrap;">📋 批次</span>
       <input type="text" id="gi-bulk" placeholder="貼上多筆，逗號或換行分隔" style="flex:1;font-size:12px;padding:6px 8px;border-radius:6px;border:0.5px solid #E5E7EB;background:#F9FAFB;color:#111;outline:none;" onkeydown="if(event.key==='Enter')bulkAddGuests()" />
       <button class="btn" onclick="bulkAddGuests()">匯入</button>
@@ -270,7 +285,7 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
         <input type="file" id="guest-excel-input" accept=".xlsx,.xls" style="display:none;" onchange="importGuestsFromExcel(this)">
       </label>
     </div>
-    <div style="font-size:10px;color:#9CA3AF;padding:2px 0 0 2px;">Excel 匯入：第一欄為賓客姓名，首列可為標題（自動略過）</div>
+    <div class="admin-only" style="display:none;font-size:10px;color:#9CA3AF;padding:2px 0 0 2px;">Excel 匯入：第一欄為賓客姓名，首列可為標題（自動略過）</div>
   </div>
   <div class="chips" id="chips"></div>
 </div>
@@ -279,6 +294,7 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import{getDatabase,ref,onValue,set}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const fb=initializeApp({
     apiKey: "AIzaSyCo2eMHEHEfBQfWiVmQ6PhUsdeIM6eb57Q",
@@ -290,7 +306,60 @@ const fb=initializeApp({
     appId: "1:802855818617:web:b7cf3b45e13b70ae660ba8"
 });
 const db = getDatabase(fb);
-const PROJECT_ID = "event_A"; 
+const auth = getAuth(fb);
+const PROJECT_ID = "event_A";
+const ADMIN_UID = "jPMackqZNTesyaAvvYuHBP3S7Mm2";
+
+let isAdmin = false;
+
+// ── 登入狀態監聽 ──
+onAuthStateChanged(auth, user => {
+  isAdmin = !!(user && user.uid === ADMIN_UID);
+  updateAuthUI();
+});
+
+function updateAuthUI() {
+  const btn = document.getElementById('btn-login');
+  const adminBtns = document.querySelectorAll('.admin-only');
+  if (isAdmin) {
+    btn.textContent = '🔓 登出';
+    btn.style.borderColor = '#6EE7B7';
+    btn.style.color = '#065F46';
+    btn.style.background = '#D1FAE5';
+    adminBtns.forEach(el => el.style.display = '');
+  } else {
+    btn.textContent = '🔒 登入';
+    btn.style.borderColor = '#FCA5A5';
+    btn.style.color = '#B91C1C';
+    btn.style.background = '#FEF2F2';
+    adminBtns.forEach(el => el.style.display = 'none');
+  }
+}
+
+window.handleAuth = async function() {
+  if (isAdmin) {
+    await signOut(auth);
+    toast('已登出', 'tin');
+  } else {
+    document.getElementById('login-modal-bg').classList.add('show');
+  }
+};
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value;
+  const errEl = document.getElementById('login-err');
+  errEl.textContent = '';
+  if (!email || !pw) { errEl.textContent = '請輸入帳號和密碼'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    document.getElementById('login-modal-bg').classList.remove('show');
+    document.getElementById('login-pw').value = '';
+    toast('✅ 登入成功', 'tok');
+  } catch(e) {
+    errEl.textContent = '帳號或密碼錯誤';
+  }
+};
 
 const masterRef = ref(db, PROJECT_ID + '/seats_master2026');
 const assignRef = ref(db, PROJECT_ID + '/assignments2026');
@@ -360,6 +429,7 @@ function rebuildGuests(){
 }
 
 async function saveAll(){
+  if (!isAdmin) return;
   setSyncStatus('saving');
   try{
     await set(assignRef, Object.keys(asgn).length ? asgn : null);
@@ -593,7 +663,7 @@ function attachSeatEvents(el, code) {
     el.addEventListener('drop',onDP);
 }
 
-function onDS(e){const id=this.dataset.id;if(!asgn[id]&&!occupied[id]){e.preventDefault();return;}
+function onDS(e){const id=this.dataset.id;if(!isAdmin||(!asgn[id]&&!occupied[id])){e.preventDefault();return;}
   dragGuest=asgn[id]||null;dragFrom=id;this.classList.add('drag-src');
   e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',dragGuest||'');showTip(e,dragGuest||'佔用');}
 function onDE(){this.classList.remove('drag-src');dragGuest=null;dragFrom=null;hideTip();clearDO();}
@@ -610,6 +680,7 @@ function onDP(e){
 }
 
 function chipDrag(chip,g){
+  if (!isAdmin) return;
   chip.draggable=true;
   chip.addEventListener('dragstart',e=>{dragGuest=g;dragFrom=null;chip.classList.add('dragging');e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',g);showTip(e,g);});
   chip.addEventListener('dragend',()=>{chip.classList.remove('dragging');dragGuest=null;dragFrom=null;hideTip();clearDO();});
@@ -621,6 +692,14 @@ window.openModal = function(code){
   
   document.getElementById('m-code').innerHTML=`<span class="bz ${layoutMode==='round'?'bzb':'bza'}">${layoutMode==='round'?'圓桌':'方陣'}</span> 座位 ${code}`;
   document.getElementById('m-name').textContent=occ?'（佔用中）':g||'（空位）';
+  
+  // 未登入只顯示資訊，不顯示操作
+  if (!isAdmin) {
+    document.getElementById('m-assign-sec').style.display='none';
+    document.getElementById('m-tag-sec').style.display='none';
+    document.getElementById('modal-bg').classList.add('show');
+    return;
+  }
   
   const avail=guests.filter(gg=>!Object.entries(asgn).some(([c,ag])=>c!==code&&ag===gg));
   const sel=document.getElementById('m-select');
@@ -677,6 +756,7 @@ window.toggleOccupied=function(){
 
 // ── ⚙️ 架構產生器邏輯 (修改為支援各排設定) ──
 document.getElementById('btn-layout-apply').addEventListener('click', async () => {
+    if (!isAdmin) { toast('請先登入才能修改座位架構', 'ter'); return; }
     if(!confirm("⚠️ 警告：這將會直接覆寫資料庫裡的座位結構！\n\n同 ID 座位的名單會保留，但縮小規模可能導致部分座位消失。\n確定要執行嗎？")) return;
     
     const mode = document.getElementById('l-mode').value;
@@ -811,6 +891,7 @@ window.renderChips=function renderChips(){
     unassignedMatches.forEach(g=>{
       const chip=document.createElement('span');chip.className='chip';chip.textContent=g;
       chip.onclick=()=>{
+        if(!isAdmin) return toast('請先登入才能指派座位','ter');
         if(modalCode&&!occupied[modalCode]){asgn[modalCode]=g;delete occupied[modalCode];refreshAll();scheduleSave();openModal(modalCode);}
         else toast('請先點選一個座位','ter');
       };
@@ -827,6 +908,7 @@ window.renderChips=function renderChips(){
   list.forEach(g=>{
     const chip=document.createElement('span');chip.className='chip';chip.textContent=g;
     chip.onclick=()=>{
+      if(!isAdmin) return toast('請先登入才能指派座位','ter');
       if(modalCode&&!occupied[modalCode]){asgn[modalCode]=g;delete occupied[modalCode];refreshAll();scheduleSave();openModal(modalCode);}
       else toast('請先點選一個座位','ter');
     };
@@ -836,6 +918,7 @@ window.renderChips=function renderChips(){
   });
 }
 function removeGuest(g){
+  if (!isAdmin) return;
   const idx=guests.indexOf(g);if(idx===-1)return;guests.splice(idx,1);
   Object.entries(asgn).forEach(([c,n])=>{if(n===g){delete asgn[c];delete tags[c];}});
   refreshAll();scheduleSave();toast('已移除：'+g.substring(0,15)+'...','tin');
