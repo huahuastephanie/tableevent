@@ -162,11 +162,10 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
     <div class="modal-handle"></div>
     <div class="modal-code">🔒 管理員登入</div>
     <div style="display:flex;flex-direction:column;gap:10px;margin:12px 0;">
-      <input type="email" id="login-email" placeholder="Email" style="font-size:14px;padding:10px;border-radius:8px;border:1px solid #D1D5DB;outline:none;width:100%;" onkeydown="if(event.key==='Enter')doLogin()">
-      <input type="password" id="login-pw" placeholder="密碼" style="font-size:14px;padding:10px;border-radius:8px;border:1px solid #D1D5DB;outline:none;width:100%;" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" id="login-pw" placeholder="請輸入管理密碼" style="font-size:14px;padding:10px;border-radius:8px;border:1px solid #D1D5DB;outline:none;width:100%;" onkeydown="if(event.key==='Enter')doLogin()">
       <div id="login-err" style="font-size:12px;color:#B91C1C;min-height:16px;"></div>
     </div>
-    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;" onclick="doLogin()">登入</button>
+    <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;" onclick="doLogin()">解鎖</button>
     <button class="modal-close" onclick="document.getElementById('login-modal-bg').classList.remove('show')">取消</button>
   </div>
 </div>
@@ -294,7 +293,6 @@ select.gs{font-size:12px;width:100%;padding:6px 8px;border-radius:6px;border:0.5
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import{getDatabase,ref,onValue,set}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
 const fb=initializeApp({
     apiKey: "AIzaSyCo2eMHEHEfBQfWiVmQ6PhUsdeIM6eb57Q",
@@ -306,17 +304,10 @@ const fb=initializeApp({
     appId: "1:802855818617:web:b7cf3b45e13b70ae660ba8"
 });
 const db = getDatabase(fb);
-const auth = getAuth(fb);
 const PROJECT_ID = "event_A";
-const ADMIN_UID = "jPMackqZNTesyaAvvYuHBP3S7Mm2";
+const ADMIN_PWD = "medical2026";
 
 let isAdmin = false;
-
-// ── 登入狀態監聽 ──
-onAuthStateChanged(auth, user => {
-  isAdmin = !!(user && user.uid === ADMIN_UID);
-  updateAuthUI();
-});
 
 function updateAuthUI() {
   const btn = document.getElementById('btn-login');
@@ -336,28 +327,29 @@ function updateAuthUI() {
   }
 }
 
-window.handleAuth = async function() {
+window.handleAuth = function() {
   if (isAdmin) {
-    await signOut(auth);
+    isAdmin = false;
+    updateAuthUI();
     toast('已登出', 'tin');
   } else {
     document.getElementById('login-modal-bg').classList.add('show');
+    setTimeout(()=>document.getElementById('login-pw').focus(), 100);
   }
 };
 
-window.doLogin = async function() {
-  const email = document.getElementById('login-email').value.trim();
-  const pw    = document.getElementById('login-pw').value;
+window.doLogin = function() {
+  const pw = document.getElementById('login-pw').value;
   const errEl = document.getElementById('login-err');
-  errEl.textContent = '';
-  if (!email || !pw) { errEl.textContent = '請輸入帳號和密碼'; return; }
-  try {
-    await signInWithEmailAndPassword(auth, email, pw);
+  if (pw === ADMIN_PWD) {
+    isAdmin = true;
     document.getElementById('login-modal-bg').classList.remove('show');
     document.getElementById('login-pw').value = '';
-    toast('✅ 登入成功', 'tok');
-  } catch(e) {
-    errEl.textContent = '帳號或密碼錯誤';
+    errEl.textContent = '';
+    updateAuthUI();
+    toast('✅ 已解鎖管理功能', 'tok');
+  } else {
+    errEl.textContent = '密碼錯誤';
   }
 };
 
