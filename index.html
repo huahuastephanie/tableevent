@@ -429,13 +429,14 @@ function rebuildGuests(){
 }
 
 async function saveAll(){
-  if (!isAdmin) return;
   setSyncStatus('saving');
   try{
-    await set(assignRef, Object.keys(asgn).length ? asgn : null);
-    await set(tagsRef, Object.keys(tags).length ? tags : null);
     const oo={}; Object.keys(occupied).forEach(k => oo[k] = '佔用');
     await set(occRef, Object.keys(oo).length ? oo : null);
+    if (isAdmin) {
+      await set(assignRef, Object.keys(asgn).length ? asgn : null);
+      await set(tagsRef, Object.keys(tags).length ? tags : null);
+    }
     setSyncStatus('ok');
   }catch(e){setSyncStatus('error');toast('儲存失敗','ter');}
 }
@@ -693,10 +694,14 @@ window.openModal = function(code){
   document.getElementById('m-code').innerHTML=`<span class="bz ${layoutMode==='round'?'bzb':'bza'}">${layoutMode==='round'?'圓桌':'方陣'}</span> 座位 ${code}`;
   document.getElementById('m-name').textContent=occ?'（佔用中）':g||'（空位）';
   
-  // 未登入只顯示資訊，不顯示操作
+  // 未登入只顯示佔用按鈕，不顯示其他操作
   if (!isAdmin) {
     document.getElementById('m-assign-sec').style.display='none';
-    document.getElementById('m-tag-sec').style.display='none';
+    document.getElementById('m-tag-sec').style.display='';
+    document.getElementById('btn-ceremony').style.display='none';
+    document.getElementById('btn-photo').style.display='none';
+    document.getElementById('btn-occ').style.display='';
+    document.getElementById('btn-occ').classList.toggle('active', !!occupied[code]);
     document.getElementById('modal-bg').classList.add('show');
     return;
   }
