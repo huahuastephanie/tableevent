@@ -69,8 +69,8 @@ h1{font-size:17px;font-weight:600;color:#1a365d;margin-bottom:.75rem;display:fle
 .sh.filled { background: #F59E0B; border-color: #B45309; color: #fff; cursor: grab; }
 
 /* ── 座位共用樣式 ── */
-.seat{height:26px;border-radius:4px;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0.5px solid;transition:all .15s;overflow:hidden;}
-.seat:hover{transform:scale(1.15);z-index:2;position:relative;}
+.seat{height:26px;border-radius:4px;cursor:pointer;font-size:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:0.5px solid;transition:all .15s;overflow:hidden;-webkit-transform:translateZ(0);transform:translateZ(0);}
+.seat:hover{transform:scale(1.15) translateZ(0);z-index:2;position:relative;}
 .sa{background:#E6F1FB;border-color:#85B7EB;color:#185FA5;}
 .sb{background:#E1F5EE;border-color:#5DCAA5;color:#0F6E56;}
 .sc{background:#FAEEDA;border-color:#EF9F27;color:#854F0B;}
@@ -88,7 +88,7 @@ h1{font-size:17px;font-weight:600;color:#1a365d;margin-bottom:.75rem;display:fle
 .seat.drag-src{opacity:.35;}
 .seat.ceremony{background:#E11D48!important;border-color:#9F1239!important;color:#fff!important;}
 .seat.photo{background:#F59E0B!important;border-color:#B45309!important;color:#fff!important;}
-.seat.occupied{background:#6366F1!important;border-color:#4338CA!important;color:#fff!important;}
+.seat.occupied{background:#6366F1!important;border-color:#4338CA!important;color:#fff!important;transform:none!important;}
 .seat.found{background:#FEF08A!important;border-color:#CA8A04!important;color:#713F12!important;box-shadow:0 0 0 3px #FDE047;animation:findpulse 1s ease-in-out 2;}
 @keyframes findpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2);box-shadow:0 0 0 5px #FDE047;}}
 
