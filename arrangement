@@ -281,13 +281,13 @@ import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-ap
 import{getDatabase,ref,onValue,set}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const fb=initializeApp({
-    apiKey: "AIzaSyB9H0Pc0_ecOmbF0zvwBW2S0JNQnn4lefg",
-    authDomain: "computex20260602.firebaseapp.com",
-    databaseURL: "https://computex20260602-default-rtdb.firebaseio.com",
-    projectId: "computex20260602",
-    storageBucket: "computex20260602.firebasestorage.app",
-    messagingSenderId: "111696785290",
-    appId: "1:111696785290:web:41a67c52f1a3363ab7e273"
+    apiKey: "AIzaSyCo2eMHEHEfBQfWiVmQ6PhUsdeIM6eb57Q",
+    authDomain: "taitra-table.firebaseapp.com",
+    databaseURL: "https://taitra-table-default-rtdb.firebaseio.com",
+    projectId: "taitra-table",
+    storageBucket: "taitra-table.firebasestorage.app",
+    messagingSenderId: "802855818617",
+    appId: "1:802855818617:web:b7cf3b45e13b70ae660ba8"
 });
 const db = getDatabase(fb);
 const PROJECT_ID = "event_A"; 
